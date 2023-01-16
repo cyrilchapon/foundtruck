@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    ports:
+      - 5442:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    # Required config for logical replication
+    command: [ "postgres", "-c", "wal_level=logical" ]
+    volumes:
+      - ./_data/postgres:/var/lib/postgresql/data
+    # tmpfs:
+    #   - /var/lib/postgresql/data
+    mem_limit: 500m
+    mem_reservation: 300m
+  adminer:
+    image: adminer
+    ports:
+      - 8090:8080
+    environment:
+      ADMINER_DESIGN: hever
+      ADMINER_DEFAULT_SERVER: postgres
+    mem_limit: 500m
+    mem_reservation: 300m

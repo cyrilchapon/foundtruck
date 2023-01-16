@@ -3,5 +3,10 @@
   "version": "0.0.1",
   "main": "index.js",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "scripts": {
+    "lint": "eslint src",
+    "fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\""
+  }
 }
