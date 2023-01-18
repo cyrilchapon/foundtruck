@@ -1,7 +1,8 @@
 import { Knex } from 'knex'
+import { KnexOrTransaction } from '../util'
 
 export const createUpdateTimestampFn =
-  (knex: Knex | Knex.Transaction) =>
+  (knex: KnexOrTransaction) =>
   async (tableName: string, columnName: string) =>
     knex.raw(`
   CREATE FUNCTION update_${tableName}_timestamp()
@@ -14,14 +15,14 @@ export const createUpdateTimestampFn =
 `)
 
 export const dropUpdateTimestampFn =
-  (knex: Knex | Knex.Transaction) =>
+  (knex: KnexOrTransaction) =>
   async (tableName: string, columnName: string) =>
     knex.raw(`
   DROP FUNCTION update_${tableName}_timestamp();
 `)
 
 export const createUpdateTrigger =
-  (knex: Knex | Knex.Transaction) =>
+  (knex: KnexOrTransaction) =>
   async (tableName: string, columnName: string) =>
     knex.raw(`
   CREATE TRIGGER ${tableName}_${columnName}
@@ -31,7 +32,7 @@ export const createUpdateTrigger =
 `)
 
 export const dropUpdateTrigger =
-  (knex: Knex | Knex.Transaction) =>
+  (knex: KnexOrTransaction) =>
   async (tableName: string, columnName: string) =>
     knex.raw(`
   DROP TRIGGER ${tableName}_${columnName}
@@ -39,9 +40,9 @@ export const dropUpdateTrigger =
 `)
 
 export const createDatabase =
-  (knex: Knex | Knex.Transaction) => async (dbName: string) =>
+  (knex: KnexOrTransaction) => async (dbName: string) =>
     knex.raw(`CREATE DATABASE ??`, dbName)
 
 export const dropDatabase =
-  (knex: Knex | Knex.Transaction) => async (dbName: string) =>
+  (knex: KnexOrTransaction) => async (dbName: string) =>
     knex.raw(`DROP DATABASE ??`, dbName)

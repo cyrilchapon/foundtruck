@@ -6,3 +6,4 @@ export { TypeJSON }
 
 export * from './envalid'
 export * from './log'
+export * as GeoJSON from './geojson'

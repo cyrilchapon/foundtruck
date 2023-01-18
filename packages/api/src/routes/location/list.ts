@@ -1,39 +1,37 @@
-import { Location } from '@chimanos/foundtruck-db'
+import { listLocations, listLocationsWithin, Location } from '@chimanos/foundtruck-db'
+import { GeoJSON } from '@chimanos/foundtruck-common'
 import { Knex } from 'knex'
 import { z } from 'zod'
 import { createEndpoint } from '../../util/validated-handler'
-import knexPostgis from 'knex-postgis'
 
 const listResponseSchema = z.array(
   z
     .object({
       id: z.string(),
-      coords: z.tuple([z.number(), z.number()]),
+      coords: GeoJSON.pointSchema,
       created_at: z.date(),
       updated_at: z.date(),
     })
     .strict() satisfies z.ZodType<Location>,
 )
 
+const listRequestBodySchema = z.object({
+  coords: GeoJSON.pointSchema,
+  radius: z.number().int().min(1000).max(50000)
+})
+
 type ListRes = z.infer<typeof listResponseSchema>
 
 const listHandler = (knex: Knex) =>
   createEndpoint({
     res: listResponseSchema,
-  })(async () => {
-    const st = knexPostgis(knex)
-    const locations = await knex<Location>('locations').select(
-      '*', st.asGeoJSON('coords')
-    )
+    body: listRequestBodySchema
+  })(async (req) => {
+    const locations = await listLocationsWithin(knex)(req.body)
 
     return {
       statusCode: 201,
-      body: locations.map((location) => ({
-        id: location.id,
-        coords: JSON.parse(location.coords),
-        created_at: location.created_at,
-        updated_at: location.updated_at,
-      })),
+      body: locations,
     }
   })
 

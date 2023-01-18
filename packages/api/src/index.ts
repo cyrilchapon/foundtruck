@@ -2,6 +2,8 @@ import { appEnv } from './env/app-env'
 import { createKnex, ensureConnection } from '@chimanos/foundtruck-db'
 import express from 'express'
 import http from 'http'
+import methodOverride from 'method-override'
+import cors from 'cors'
 
 import { createRouter } from './routes'
 import { logger } from './log'
@@ -11,7 +13,10 @@ const server = http.createServer(app)
 
 const knex = createKnex(appEnv)
 
+app.use(cors({ origin: appEnv.FRONTEND_ORIGIN }))
 app.use(express.json())
+app.use(methodOverride(undefined, { methods: ['POST'] }))
+
 if (appEnv.NODE_ENV === 'development') {
   app.set('json spaces', 2)
 }
