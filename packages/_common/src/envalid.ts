@@ -3,7 +3,7 @@ import TypeJSON, { JSONParser, JSONValue } from './json'
 import { LogLevel, logLevels } from './log'
 
 export const knownNodeEnv = ['development', 'production', 'test'] as const
-export type KnownNodeEnv = typeof knownNodeEnv[number]
+export type KnownNodeEnv = (typeof knownNodeEnv)[number]
 
 export type CleanedEnv<T> = T
 

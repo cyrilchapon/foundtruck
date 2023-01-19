@@ -1,20 +1,20 @@
-import { Knex } from 'knex'
-import { Umzug } from 'umzug'
-import { KnexStorage } from './umzug-knex-storage'
+import { MongoDBStorage, Umzug } from 'umzug'
 import fs from 'fs'
 import path from 'path'
+import { MongoClient } from 'mongodb'
 
 export type UmzugPurpose = 'migration' | 'seed'
 
-export const createUmzug = (knex: Knex, purpose: UmzugPurpose) => {
+export const createUmzug = (mongo: MongoClient, purpose: UmzugPurpose) => {
+  const db = mongo.db()
+
   const umzug = new Umzug({
-    storage: new KnexStorage({
-      knex,
-      schemaName: 'migrations',
-      tableName: `executed_${purpose}s`,
+    storage: new MongoDBStorage({
+      connection: db,
+      collectionName: `${purpose}s`,
     }),
     context: {
-      knex,
+      mongo: db,
     },
     migrations: {
       glob: `src/migrate/${purpose}s/!(_template).ts`,
@@ -22,10 +22,17 @@ export const createUmzug = (knex: Knex, purpose: UmzugPurpose) => {
     logger: console,
     create: {
       folder: path.resolve(__dirname, `${purpose}s`),
-      template: (filepath) => ([
-        [filepath, fs.readFileSync(path.resolve(__dirname, `${purpose}s`, '_template.ts')).toString()]
-      ]),
-    }
+      template: (filepath) => [
+        [
+          filepath,
+          fs
+            .readFileSync(
+              path.resolve(__dirname, `${purpose}s`, '_template.ts'),
+            )
+            .toString(),
+        ],
+      ],
+    },
   })
 
   return umzug

@@ -1,11 +1,12 @@
 import express from 'express'
 import { listHandler } from './list'
-import { Knex } from 'knex'
+import { Mongoose } from 'mongoose'
+import { Models } from '@chimanos/foundtruck-db'
 
-const createFoodtruckHandler = (knex: Knex) => {
+const createFoodtruckHandler = (mongoose: Mongoose, models: Models) => {
   const router = express.Router()
 
-  router.get('/', ...listHandler(knex))
+  router.get('/', ...listHandler(mongoose, models))
 
   return router
 }

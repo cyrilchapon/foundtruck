@@ -1,6 +1,7 @@
-import { vectorTile } from '@chimanos/foundtruck-db'
-import { Knex } from 'knex'
+import { Models } from '@chimanos/foundtruck-db'
+import { Mongoose } from 'mongoose'
 import { z } from 'zod'
+import { GeoJSONVT, getMvtTile } from '../../tiles'
 import { createEndpoint } from '../../util/validated-handler'
 
 const renderResponseSchema = z.any()
@@ -13,19 +14,23 @@ const renderParamsSchema = z.object({
 })
 type RenderParams = z.infer<typeof renderParamsSchema>
 
-const renderHandler = (knex: Knex) =>
+const renderHandler = (
+  mongoose: Mongoose,
+  models: Models,
+  tileIndex: GeoJSONVT,
+) =>
   createEndpoint({
     res: renderResponseSchema,
     params: renderParamsSchema,
   })(async (req) => {
-    const { x, y, z } = req.params
-    const tile = await vectorTile(knex)(x, y, z, 4096, 64)
+    const { z, x, y } = req.params
 
-    console.log(tile)
+    const tile = await getMvtTile({ foodtrucks: tileIndex })(z, x, y)
 
     return {
       statusCode: 200,
       contentType: 'application/x-protobuf',
+      contentEncoding: 'gzip',
       body: tile,
     }
   })

@@ -12,9 +12,9 @@ type Migration = {
 }
 
 export class KnexStorage implements UmzugStorage {
-	public readonly tableName: string;
-  public readonly schemaName?: string;
-	public readonly knex: Knex;
+  public readonly tableName: string
+  public readonly schemaName?: string
+  public readonly knex: Knex
 
   constructor(options: KnexStorageOptions) {
     this.tableName = options.tableName || 'migrations'
@@ -22,36 +22,37 @@ export class KnexStorage implements UmzugStorage {
     this.knex = options.knex
   }
 
-  async logMigration (params: MigrationParams<unknown>) {
+  async logMigration(params: MigrationParams<unknown>) {
     const queryBuilder = this._getQueryBuilder()
-    await queryBuilder
-      .insert({
-        name: params.name
-      }, '*')
+    await queryBuilder.insert(
+      {
+        name: params.name,
+      },
+      '*',
+    )
   }
 
-  async unlogMigration (params: MigrationParams<unknown>) {
+  async unlogMigration(params: MigrationParams<unknown>) {
     const queryBuilder = this._getQueryBuilder()
     await queryBuilder
-    .where({
-      name: params.name
-    })
-    .delete()
+      .where({
+        name: params.name,
+      })
+      .delete()
   }
 
-  async executed () {
+  async executed() {
     await this.createTable()
 
     const queryBuilder = this._getQueryBuilder()
-    const migrations = await queryBuilder
-      .select()
+    const migrations = await queryBuilder.select()
 
-    const migrationNames = migrations.map(m => m.name)
+    const migrationNames = migrations.map((m) => m.name)
 
     return migrationNames
   }
 
-  async createTable () {
+  async createTable() {
     await this._createSchema()
 
     if (!(await this._tableExists())) {
@@ -59,7 +60,7 @@ export class KnexStorage implements UmzugStorage {
     }
   }
 
-  async _createTable () {
+  async _createTable() {
     const schemaBuilder = this._getSchemaBuilder()
 
     await schemaBuilder.createTable(this.tableName, (tableBuilder) => {
@@ -68,31 +69,27 @@ export class KnexStorage implements UmzugStorage {
     })
   }
 
-  async _createSchema () {
+  async _createSchema() {
     if (this.schemaName != null) {
       return this.knex.schema.createSchemaIfNotExists(this.schemaName)
     }
   }
 
-  async _tableExists () {
+  async _tableExists() {
     const schemaBuilder = this._getSchemaBuilder()
 
     return await schemaBuilder.hasTable(this.tableName)
   }
 
-  _getQueryBuilder () {
-    return (
-      this.schemaName != null
-        ? this.knex<Migration>(this.tableName).withSchema(this.schemaName)
-        : this.knex<Migration>(this.tableName)
-    )
+  _getQueryBuilder() {
+    return this.schemaName != null
+      ? this.knex<Migration>(this.tableName).withSchema(this.schemaName)
+      : this.knex<Migration>(this.tableName)
   }
 
-  _getSchemaBuilder () {
-    return (
-      this.schemaName != null
-        ? this.knex.schema.withSchema(this.schemaName)
-        : this.knex.schema
-    )
+  _getSchemaBuilder() {
+    return this.schemaName != null
+      ? this.knex.schema.withSchema(this.schemaName)
+      : this.knex.schema
   }
 }

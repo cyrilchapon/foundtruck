@@ -10,7 +10,4 @@ export const francePolygon = polygon([
   ],
 ])
 
-export const franceCenter = [
-  2.234628859317638,
-  47.248337552610025
-]
+export const franceCenter = [2.234628859317638, 47.248337552610025]

@@ -20,11 +20,22 @@ const createVh =
     params?: ZVParams
     query?: ZVQuery
     body?: ZVBody
-  }) => (
-    handler: RequestHandler<z.infer<ZVParams>, unknown, z.infer<ZVBody>, z.infer<ZVQuery>>,
+  }) =>
+  (
+    handler: RequestHandler<
+      z.infer<ZVParams>,
+      unknown,
+      z.infer<ZVBody>,
+      z.infer<ZVQuery>
+    >,
   ): [
     RequestHandler<TVParams, unknown, TVBody, TVQuery>,
-    RequestHandler<z.infer<ZVParams>, unknown, z.infer<ZVBody>, z.infer<ZVQuery>>,
+    RequestHandler<
+      z.infer<ZVParams>,
+      unknown,
+      z.infer<ZVBody>,
+      z.infer<ZVQuery>
+    >,
   ] =>
     [processRequest(schemas), handler]
 
@@ -40,11 +51,22 @@ const createVah =
     params?: ZVParams
     query?: ZVQuery
     body?: ZVBody
-  }) => (
-    handler: AsyncRequestHandler<z.infer<ZVParams>, unknown, z.infer<ZVBody>, z.infer<ZVQuery>>,
+  }) =>
+  (
+    handler: AsyncRequestHandler<
+      z.infer<ZVParams>,
+      unknown,
+      z.infer<ZVBody>,
+      z.infer<ZVQuery>
+    >,
   ): [
     RequestHandler<TVParams, unknown, TVBody, TVQuery>,
-    RequestHandler<z.infer<ZVParams>, unknown, z.infer<ZVBody>, z.infer<ZVQuery>>,
+    RequestHandler<
+      z.infer<ZVParams>,
+      unknown,
+      z.infer<ZVBody>,
+      z.infer<ZVQuery>
+    >,
   ] =>
     [processRequest(schemas), createAsyncHandler(handler)]
 
@@ -63,11 +85,22 @@ const createVmah =
     query?: ZVQuery
     body?: ZVBody
     res?: ZVResBody
-  }) => (
-    handler: AsyncManagedRequestHandler<z.infer<ZVParams>, z.infer<ZVResBody>, z.infer<ZVBody>, z.infer<ZVQuery>>,
+  }) =>
+  (
+    handler: AsyncManagedRequestHandler<
+      z.infer<ZVParams>,
+      z.infer<ZVResBody>,
+      z.infer<ZVBody>,
+      z.infer<ZVQuery>
+    >,
   ): [
     RequestHandler<TVParams, unknown, TVBody, TVQuery>,
-    RequestHandler<z.infer<ZVParams>, z.infer<ZVResBody>,  z.infer<ZVBody>, z.infer<ZVQuery>>,
+    RequestHandler<
+      z.infer<ZVParams>,
+      z.infer<ZVResBody>,
+      z.infer<ZVBody>,
+      z.infer<ZVQuery>
+    >,
   ] =>
     [processRequest(schemas), createAsyncManagedHandler(handler)]
 

@@ -2,8 +2,8 @@ import { FunctionComponent } from 'react'
 import { useMap } from 'react-map-gl'
 
 export type MapImageProps = {
-  id: string,
-  src: string,
+  id: string
+  src: string
   sdf?: boolean
 }
 

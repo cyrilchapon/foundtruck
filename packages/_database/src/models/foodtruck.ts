@@ -1,12 +1,42 @@
-import { BaseInsert, BaseInsertWithId, BaseUpdate } from './base'
+import { Feature, Point } from 'geojson'
+import { Model, Schema, Types } from 'mongoose'
+import { Location, locationSchema } from './location'
 
 export type Foodtruck = {
-  id: string
+  _id: Types.ObjectId
   name: string
-  created_at: Date
-  updated_at: Date
+  location: Location
 }
 
-export type FoodtruckInsert = BaseInsert<Foodtruck>
-export type FoodtruckInsertWithId = BaseInsertWithId<Foodtruck>
-export type FoodtruckUpdate = BaseUpdate<Foodtruck>
+type FoodtruckDocumentOverrides = {
+  names: Types.Subdocument<Types.ObjectId> & Foodtruck
+}
+
+export const foodtruckSchema = new Schema<Foodtruck>({
+  // _id: { type: Schema.Types.ObjectId },
+  name: { type: String, required: true },
+  location: locationSchema,
+})
+
+export type FoodtruckModel = Model<
+  Foodtruck,
+  Record<string, never>,
+  FoodtruckDocumentOverrides
+>
+
+export const findAsGeoJSONFeatures =
+  (foodtruckModel: FoodtruckModel) => async () => {
+    return foodtruckModel.aggregate<Feature<Point>>([
+      {
+        $project: {
+          _id: 0,
+          type: { $literal: 'Feature' },
+          properties: {
+            _id: '$_id',
+            name: '$name',
+          },
+          geometry: '$location.point',
+        },
+      },
+    ])
+  }

@@ -1,25 +1,24 @@
 services:
-  postgres:
-    image: postgis/postgis:15-3.3-alpine
+  mongo:
+    image: mongo:6.0
     ports:
-      - 5442:5432
+      - 27017:27017
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-    # Required config for logical replication
-    command: [ "postgres", "-c", "wal_level=logical" ]
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    restart: always
     volumes:
-      - ./_data/postgres:/var/lib/postgresql/data
+      - ./_data/mongodb:/var/lib/mongo/data
     # tmpfs:
-    #   - /var/lib/postgresql/data
+    #   - /var/lib/mongo/data
     mem_limit: 500m
     mem_reservation: 300m
-  adminer:
-    image: adminer
+  mongo-express:
+    image: mongo-express
+    restart: always
     ports:
-      - 8090:8080
+      - 8081:8081
     environment:
-      ADMINER_DESIGN: hever
-      ADMINER_DEFAULT_SERVER: postgres
-    mem_limit: 500m
-    mem_reservation: 300m
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/

@@ -10,13 +10,13 @@ import * as envalid from 'envalid'
 interface MgmtEnv {
   NODE_ENV: KnownNodeEnv
   LOG_LEVEL: LogLevel
-  DATABASE_URL: string
+  MONGO_URI: string
 }
 
 const mgmtEnvValidators = {
   NODE_ENV: envalid.str({ choices: knownNodeEnv }),
   LOG_LEVEL: logLevelValidator(),
-  DATABASE_URL: envalid.url(),
+  MONGO_URI: envalid.url(),
 }
 
 const getMgmtEnv = (env: NodeJS.ProcessEnv = process.env) => {

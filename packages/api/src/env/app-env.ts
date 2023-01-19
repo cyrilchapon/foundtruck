@@ -11,7 +11,7 @@ interface AppEnv {
   NODE_ENV: KnownNodeEnv
   LOG_LEVEL: LogLevel
   PORT: number
-  DATABASE_URL: string
+  MONGO_URI: string
   FRONTEND_ORIGIN: string
 }
 
@@ -19,8 +19,8 @@ const appEnvValidators = {
   NODE_ENV: envalid.str({ choices: knownNodeEnv }),
   LOG_LEVEL: logLevelValidator(),
   PORT: envalid.port(),
-  DATABASE_URL: envalid.url(),
-  FRONTEND_ORIGIN: envalid.url()
+  MONGO_URI: envalid.url(),
+  FRONTEND_ORIGIN: envalid.url(),
 }
 
 const getAppEnv = (env: NodeJS.ProcessEnv = process.env) => {

@@ -1,5 +1,5 @@
 import { appEnv } from './env/app-env'
-import { createKnex, ensureConnection } from '@chimanos/foundtruck-db'
+import { createModels, createMongoose } from '@chimanos/foundtruck-db'
 import express from 'express'
 import http from 'http'
 import methodOverride from 'method-override'
@@ -7,11 +7,13 @@ import cors from 'cors'
 
 import { createRouter } from './routes'
 import { logger } from './log'
+import { buildTileIndex } from './tiles'
 
 const app = express()
 const server = http.createServer(app)
 
-const knex = createKnex(appEnv)
+const mongoose = createMongoose()
+const models = createModels(mongoose)
 
 app.use(cors({ origin: appEnv.FRONTEND_ORIGIN }))
 app.use(express.json())
@@ -23,9 +25,11 @@ if (appEnv.NODE_ENV === 'development') {
 
 const go = async () => {
   try {
-    await ensureConnection(knex)
+    await mongoose.connect(appEnv.MONGO_URI)
 
-    app.use('/', createRouter(knex))
+    const tileIndex = await buildTileIndex(models)
+
+    app.use('/', createRouter(mongoose, models, tileIndex))
 
     server.listen(appEnv.PORT, () =>
       logger.info(`Magic happens on port ${appEnv.PORT}`),
@@ -35,7 +39,7 @@ const go = async () => {
       server.on('error', reject)
     })
   } finally {
-    await knex.destroy().catch(logger.error)
+    await mongoose.disconnect().catch(logger.error)
   }
 }
 

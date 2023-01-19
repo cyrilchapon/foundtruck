@@ -1,5 +1,10 @@
 {
   "execMap": {
     "ts": "dotenv -e ../../.env -e ./.env -- ts-node"
-  }
+  },
+  "watch": [
+    "./src",
+    "../_common/src",
+    "../_database/src"
+  ]
 }

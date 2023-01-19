@@ -1,15 +1,19 @@
+import { Models } from '@chimanos/foundtruck-db'
 import express from 'express'
-import { Knex } from 'knex'
+import { Mongoose } from 'mongoose'
+import { GeoJSONVT } from '../tiles'
 import { createFoodtruckHandler } from './foodtruck'
-import { createLocationHandler } from './location'
 import { createTileHandler } from './tile'
 
-const createRouter = (knex: Knex) => {
+const createRouter = (
+  mongoose: Mongoose,
+  models: Models,
+  tileIndex: GeoJSONVT,
+) => {
   const router = express.Router()
 
-  router.use('/foodtrucks', createFoodtruckHandler(knex))
-  router.use('/locations', createLocationHandler(knex))
-  router.use('/tiles', createTileHandler(knex))
+  router.use('/foodtrucks', createFoodtruckHandler(mongoose, models))
+  router.use('/tiles', createTileHandler(mongoose, models, tileIndex))
 
   return router
 }

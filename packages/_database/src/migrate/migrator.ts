@@ -1,21 +1,19 @@
 import { Command } from '@commander-js/extra-typings'
 import { mgmtEnv } from '../env/mgmt-env'
-import { createKnex } from '../knex'
+import { createMongo } from '../mongo'
 import { createUmzug } from './umzug'
 
-const knex = createKnex(mgmtEnv)
-const umzug = createUmzug(knex, 'migration')
+const mongo = createMongo(mgmtEnv)
+const umzug = createUmzug(mongo, 'migration')
 
 const program = new Command()
-program
-  .name('mig')
-  .description('Perform database migrations powered by Umzug')
+program.name('mig').description('Perform database migrations powered by Umzug')
 
 program
   .command('create')
   .description('Create a new migration')
   .argument('<name>', 'name of migration to create')
-  .action(async (name, options) => {
+  .action(async (name) => {
     const nameWithExtension = name.endsWith('.ts') ? name : `${name}.ts`
     const nameWithTimestamp = `${Date.now()}-${nameWithExtension}`
 
@@ -24,7 +22,7 @@ program
       prefix: 'NONE',
       allowExtension: '.ts',
       allowConfusingOrdering: false,
-      skipVerify: false
+      skipVerify: false,
     })
   })
 
@@ -48,7 +46,7 @@ const go = async () => {
   try {
     await program.parseAsync()
   } finally {
-    await knex.destroy()
+    await mongo.close()
   }
 }
 

@@ -22,6 +22,7 @@ type AsyncRequestHandler<
 type ResDescriptor<ResBody> = {
   statusCode?: number
   contentType?: string
+  contentEncoding?: string
   body: ResBody
 }
 
@@ -89,11 +90,21 @@ const createAsyncManagedHandler = <
     next: NextFunction,
   ) => {
     handler(req)
-      .then(({ statusCode = 200, contentType = 'application/json', body }) => {
-        res.type(contentType)
-        res.status(statusCode)
-        res.send(body)
-      })
+      .then(
+        ({
+          statusCode = 200,
+          contentType = 'application/json',
+          contentEncoding,
+          body,
+        }) => {
+          res.type(contentType)
+          res.status(statusCode)
+          if (contentEncoding != null) {
+            res.header('content-encoding', contentEncoding)
+          }
+          res.send(body)
+        },
+      )
       .catch(next)
   }
 }
@@ -133,11 +144,21 @@ const createAsyncManagedErrorHandler = <
     next: NextFunction,
   ) => {
     handler(err, req)
-      .then(({ statusCode = 500, contentType = 'application/json', body }) => {
-        res.type(contentType)
-        res.status(statusCode)
-        res.send(body)
-      })
+      .then(
+        ({
+          statusCode = 500,
+          contentType = 'application/json',
+          contentEncoding,
+          body,
+        }) => {
+          res.type(contentType)
+          res.status(statusCode)
+          if (contentEncoding != null) {
+            res.header('content-encoding', contentEncoding)
+          }
+          res.send(body)
+        },
+      )
       .catch(next)
   }
 }

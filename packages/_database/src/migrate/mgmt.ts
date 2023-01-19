@@ -1,41 +1,38 @@
 import { Command } from '@commander-js/extra-typings'
 import { mgmtEnv } from '../env/mgmt-env'
-import { createKnex } from '../knex'
 import { URL } from 'url'
 import { createDatabase, dropDatabase } from './util'
+import { createMongo } from '../mongo'
 
-const _mgmtURL = new URL(mgmtEnv.DATABASE_URL)
+const _mgmtURL = new URL(mgmtEnv.MONGO_URI)
+const dbName = _mgmtURL.pathname.replace('/', '')
 _mgmtURL.pathname = ''
 const mgmtURL = _mgmtURL.toString()
 
-const knex = createKnex({ DATABASE_URL: mgmtURL })
+const mongo = createMongo({ MONGO_URI: mgmtURL })
 
 const program = new Command()
-program
-  .name('db')
-  .description('Perform database management tasks')
+program.name('db').description('Perform database management tasks')
 
 program
   .command('create')
   .description('Create database')
   .action(async () => {
-    const dbName = new URL(mgmtEnv.DATABASE_URL).pathname.replace('/', '')
-    await createDatabase(knex)(dbName)
+    await createDatabase(mongo)(dbName)
   })
 
 program
   .command('drop')
   .description('Drop database')
   .action(async () => {
-    const dbName = new URL(mgmtEnv.DATABASE_URL).pathname.replace('/', '')
-    await dropDatabase(knex)(dbName)
+    await dropDatabase(mongo)(dbName)
   })
 
 const go = async () => {
   try {
     await program.parseAsync()
   } finally {
-    await knex.destroy()
+    await mongo.close()
   }
 }
 
