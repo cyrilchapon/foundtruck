@@ -13,7 +13,6 @@ const MapImage: FunctionComponent<MapImageProps> = (props) => {
 
   if (map != null && !map.hasImage(id)) {
     map.loadImage(src, (error, image) => {
-      console.log(image)
       if (error) throw error
       if (image != null && !map.hasImage(id))
         map.addImage(id, image, { sdf: sdf ?? false })

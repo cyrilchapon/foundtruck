@@ -1,4 +1,11 @@
-import { Layer, Map, MapRef, Marker, MarkerDragEvent, Source } from 'react-map-gl'
+import {
+  Layer,
+  Map,
+  MapRef,
+  Marker,
+  MarkerDragEvent,
+  Source,
+} from 'react-map-gl'
 import maplibregl from 'maplibre-gl'
 import { useSystemColorMode } from './hooks/use-system-color-mode'
 import React, { useEffect, useState } from 'react'
@@ -85,7 +92,6 @@ const AppMap = () => {
 
       <Source
         id="foodtrucks-source"
-        // name="admin"
         type="vector"
         tiles={['http://localhost:1337/tiles/{z}/{x}/{y}.pbf']}
       >
@@ -93,7 +99,7 @@ const AppMap = () => {
           id="foodtrucks-icons"
           source="foodtrucks-source"
           type="symbol"
-          source-layer="admin"
+          source-layer="foodtrucks"
           minzoom={8}
           layout={{
             'icon-image': `restaurant-marker`,
