@@ -4,14 +4,14 @@ import { locationZ } from './location'
 import { FlattenId } from './object-id'
 
 type _SerializedFoodtruck = FlattenId<
-  Omit<Foodtruck, 'location'> & { location: FlattenId<Location> }
+  Omit<Foodtruck, 'locations'> & { locations: FlattenId<Location>[] }
 >
 
 export const foodtruckZ = z
   .object({
     _id: z.string(),
     name: z.string(),
-    location: locationZ,
+    locations: z.array(locationZ),
   })
   .strict() satisfies z.ZodType<_SerializedFoodtruck>
 

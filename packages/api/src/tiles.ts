@@ -15,20 +15,27 @@ let _tileIndex: GeoJSONVT | null = null
 
 export const buildTileIndex = async (models: Models, rebuild = false) => {
   if (_tileIndex == null || rebuild) {
-    const features = await findAsGeoJSONFeatures(models.foodtruck)()
+    const _features = await findAsGeoJSONFeatures(models.foodtruck)()
+    const features = _features.map((feature) => ({
+      ...feature,
+      // In geoJSON, feature.id has to be a number
+      // Last portion of Mongo.ObjectID (char 18-23) is
+      // the increment value expressed in hexadecimal
+      id: parseInt((feature.id as string).slice(18, 23), 16),
+    }))
+
     const featureCollection: FeatureCollection<Point> = {
       type: 'FeatureCollection',
       features,
     }
 
     _tileIndex = geojsonVt(featureCollection, {
-      promoteId: '_id',
+      // promoteId: 'location._id',
     })
 
     logger.info(
       `Successfully build tile index with ${features.length} features`,
     )
-    // logger.debug(_tileIndex.)
   }
 
   return _tileIndex
@@ -45,6 +52,16 @@ export const getMvtTile =
 export const getPbfTile =
   <T extends string>(tileIndexes: Record<T, GeoJSONVT>) =>
   (z: number, x: number, y: number) => {
+    const jsonTiles = getJsonTile(tileIndexes)(z, x, y)
+
+    const pbfTile = tilesToPbf(jsonTiles)
+
+    return pbfTile
+  }
+
+export const getJsonTile =
+  <T extends string>(tileIndexes: Record<T, GeoJSONVT>) =>
+  (z: number, x: number, y: number) => {
     const tileIndexesEntries = Object.entries(tileIndexes) as [T, GeoJSONVT][]
     const jsonTilesEntries = tileIndexesEntries.map<[T, Tile | null]>(
       ([k, tileIndex]) => [k, tileIndex.getTile(z, x, y)],
@@ -54,9 +71,7 @@ export const getPbfTile =
       Tile | null
     >
 
-    const pbfTile = tilesToPbf(jsonTiles)
-
-    return pbfTile
+    return jsonTiles
   }
 
 export const tilesToPbf = <T extends string>(
@@ -64,11 +79,11 @@ export const tilesToPbf = <T extends string>(
 ) => {
   const jsonTilesEntries = Object.entries(jsonTiles) as [T, Tile | null][]
   const nonEmptyJsonTilesEntries = jsonTilesEntries.filter(
-    ([k, tile]) => tile != null,
+    ([, tile]) => tile != null,
   ) as [T, Tile][]
   const nonEmptyJsonTiles = Object.fromEntries(
     nonEmptyJsonTilesEntries,
   ) as Record<T, Tile>
 
-  return vtpbf.fromGeojsonVt(nonEmptyJsonTiles) as Uint8Array
+  return vtpbf.fromGeojsonVt(nonEmptyJsonTiles, { version: 2 }) as Uint8Array
 }

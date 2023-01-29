@@ -3,9 +3,8 @@ import {
   BottomNavigation,
   BottomNavigationAction,
   Box,
-  Button,
+  Drawer,
   Paper,
-  useMediaQuery,
 } from '@mui/material'
 import CssBaseline from '@mui/material/CssBaseline'
 import React, { useState } from 'react'
@@ -24,15 +23,19 @@ const App = () => {
     [colorMode],
   )
 
-  const [activeTab, setActiveTab] = useState<any>()
+  const [activeTab, setActiveTab] = useState<unknown>()
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <Box sx={{ width: '100%', height: '100%', pb: 7 }}>
+      <Box sx={{ width: '100%', height: '100%' }}>
+        <Drawer variant="permanent" elevation={2}>
+          Coucou
+        </Drawer>
+
         <AppMap />
-        <Paper
+        {/* <Paper
           sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
           elevation={3}
         >
@@ -47,7 +50,7 @@ const App = () => {
             <BottomNavigationAction label="Favorites" icon={<FavoriteIcon />} />
             <BottomNavigationAction label="Archive" icon={<ArchiveIcon />} />
           </BottomNavigation>
-        </Paper>
+        </Paper> */}
       </Box>
     </ThemeProvider>
   )

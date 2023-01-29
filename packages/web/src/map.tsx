@@ -8,13 +8,16 @@ import {
 } from 'react-map-gl'
 import maplibregl from 'maplibre-gl'
 import { useSystemColorMode } from './hooks/use-system-color-mode'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Pin from './user-pin'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { franceCenter } from './util'
 import useGeolocation from 'react-hook-geolocation'
 import MapImage from './map-image'
+import type { Feature, Point } from 'geojson'
+import { distance } from '@turf/turf'
+import { throttle } from 'lodash'
 
 const systemColorMapStyles = {
   dark: 'https://api.maptiler.com/maps/streets-v2-dark/style.json?key=ykkVoTRA4nCSnF4onbUp',
@@ -68,6 +71,19 @@ const AppMap = () => {
     zoom: 2,
   })
 
+  const updateFeaturesDistance = useMemo(
+    () =>
+      throttle(
+        _updateFeaturesDistance('foodtrucks-source', 'foodtrucks', 'distance'),
+        100,
+      ),
+    [],
+  )
+
+  const handleInteraction = useCallback(() => {
+    updateFeaturesDistance(userLoc, map)
+  }, [map, userLoc, updateFeaturesDistance])
+
   // React.useEffect(() => {
   //   if (userLoc != null) {
   //     setViewState({
@@ -87,13 +103,19 @@ const AppMap = () => {
       mapStyle={mapStyle}
       ref={mapRef}
       onLoad={handleMapLoad}
+      onDrag={handleInteraction}
+      onZoom={handleInteraction}
+      onRotate={handleInteraction}
+      onPitch={handleInteraction}
+      onSourceData={handleInteraction}
     >
-      <MapImage id="restaurant-marker" src="/restaurant-marker.png" />
+      <MapImage id="marker" src="/foodtruck.png" sdf />
 
       <Source
         id="foodtrucks-source"
         type="vector"
         tiles={['http://localhost:1337/tiles/{z}/{x}/{y}.pbf']}
+        // promoteId="id"
       >
         <Layer
           id="foodtrucks-icons"
@@ -101,9 +123,10 @@ const AppMap = () => {
           type="symbol"
           source-layer="foodtrucks"
           minzoom={8}
+          interactive={true}
           layout={{
-            'icon-image': `restaurant-marker`,
-            'icon-anchor': 'bottom',
+            'icon-image': `marker`,
+            // 'icon-anchor': 'bottom',
             'icon-allow-overlap': true,
             'icon-size': [
               'interpolate',
@@ -112,11 +135,35 @@ const AppMap = () => {
               ['zoom'],
               // When zoom is 15, buildings will be beige.
               10,
-              0.2,
+              0.15,
               // When zoom is 18 or higher, buildings will be yellow.
               18,
-              0.5,
+              0.3,
             ],
+          }}
+          paint={{
+            'icon-color':
+              userLoc != null
+                ? [
+                    'step',
+                    ['feature-state', 'distance'],
+                    '#E02F58',
+                    5000,
+                    '#555555',
+                  ]
+                : '#E02F58',
+            'icon-opacity':
+              userLoc != null
+                ? [
+                    'step',
+                    ['feature-state', 'distance'],
+                    1,
+                    5000,
+                    0.35,
+                    10000,
+                    0,
+                  ]
+                : 0.8,
           }}
         />
       </Source>
@@ -151,9 +198,10 @@ const AppMap = () => {
             }}
           >
             <Layer
-              id="user-circle"
+              id="user-secondary-circle"
               source="user-loc"
               type="circle"
+              // beforeId="foodtrucks-icons"
               paint={{
                 'circle-radius': [
                   'interpolate',
@@ -164,11 +212,36 @@ const AppMap = () => {
                   20,
                   [
                     '/',
-                    ['/', 1500, 0.075],
+                    ['/', 10000, 0.075],
                     ['cos', ['*', ['get', 'lat'], ['/', Math.PI, 180]]],
                   ],
                 ],
-                'circle-opacity': 0.2,
+                'circle-color': '#E02F58',
+                'circle-opacity': 0.05,
+              }}
+            />
+
+            <Layer
+              id="user-primary-circle"
+              source="user-loc"
+              type="circle"
+              // beforeId="foodtrucks-icons"
+              paint={{
+                'circle-radius': [
+                  'interpolate',
+                  ['exponential', 2],
+                  ['zoom'],
+                  0,
+                  0,
+                  20,
+                  [
+                    '/',
+                    ['/', 5000, 0.075],
+                    ['cos', ['*', ['get', 'lat'], ['/', Math.PI, 180]]],
+                  ],
+                ],
+                'circle-color': '#E02F58',
+                'circle-opacity': 0.1,
               }}
             />
           </Source>
@@ -177,5 +250,46 @@ const AppMap = () => {
     </Map>
   )
 }
+
+const _updateFeaturesDistance =
+  (sourceId: string, layerId: string, featureStateName: string) =>
+  (userLoc: [number, number] | null, map: UnderlyingMap | null) => {
+    if (userLoc != null && map != null) {
+      const userLocFeature: Feature<Point> = {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: userLoc,
+        },
+        properties: {},
+      }
+
+      const features =
+        map.querySourceFeatures(sourceId, {
+          sourceLayer: layerId,
+        }) ?? []
+
+      features.forEach((f) => {
+        if (
+          f.id != null &&
+          f.type === 'Feature' &&
+          f.geometry.type === 'Point'
+        ) {
+          const distanceFromUser =
+            distance(f as Feature<Point>, userLocFeature) * 1000
+          map.setFeatureState(
+            {
+              ...f,
+              source: sourceId,
+              sourceLayer: layerId,
+            },
+            {
+              [featureStateName]: distanceFromUser,
+            },
+          )
+        }
+      })
+    }
+  }
 
 export default AppMap

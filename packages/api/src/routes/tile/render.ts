@@ -1,7 +1,7 @@
 import { Models } from '@chimanos/foundtruck-db'
 import { Mongoose } from 'mongoose'
 import { z } from 'zod'
-import { GeoJSONVT, getMvtTile } from '../../tiles'
+import { GeoJSONVT, getJsonTile, getMvtTile, getPbfTile } from '../../tiles'
 import { createEndpoint } from '../../util/validated-handler'
 
 const renderResponseSchema = z.any()
@@ -25,6 +25,8 @@ const renderHandler = (
   })(async (req) => {
     const { z, x, y } = req.params
 
+    const jsonTile = getJsonTile({ foodtrucks: tileIndex })(z, x, y)
+    console.log(jsonTile.foodtrucks?.features[0])
     const tile = await getMvtTile({ foodtrucks: tileIndex })(z, x, y)
 
     return {

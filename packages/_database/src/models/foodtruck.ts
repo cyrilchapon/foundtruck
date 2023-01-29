@@ -1,21 +1,28 @@
 import { Feature, Point } from 'geojson'
 import { Model, Schema, Types } from 'mongoose'
+import { DayMeal } from './day-meal'
 import { Location, locationSchema } from './location'
 
 export type Foodtruck = {
   _id: Types.ObjectId
   name: string
-  location: Location
+  locations: Location[]
 }
 
 type FoodtruckDocumentOverrides = {
-  names: Types.Subdocument<Types.ObjectId> & Foodtruck
+  locations: Types.DocumentArray<
+    Omit<Location, 'point' | 'dayMeals'> & {
+      // dayMeals: Types.DocumentArray<DayMeal>
+      dayMeals: Types.Array<Types.Subdocument<never> & DayMeal>
+      point: Types.Subdocument<never> & Point
+    }
+  >
 }
 
 export const foodtruckSchema = new Schema<Foodtruck>({
   // _id: { type: Schema.Types.ObjectId },
   name: { type: String, required: true },
-  location: locationSchema,
+  locations: { type: [locationSchema], required: true },
 })
 
 export type FoodtruckModel = Model<
@@ -28,14 +35,27 @@ export const findAsGeoJSONFeatures =
   (foodtruckModel: FoodtruckModel) => async () => {
     return foodtruckModel.aggregate<Feature<Point>>([
       {
+        $unwind: {
+          path: '$locations',
+        },
+      },
+      {
         $project: {
           _id: 0,
+          id: { $toString: '$locations._id' },
           type: { $literal: 'Feature' },
           properties: {
-            _id: '$_id',
-            name: '$name',
+            foodtruck: {
+              _id: { $toString: '$_id' },
+              name: '$name',
+            },
+            location: {
+              _id: { $toString: '$locations._id' },
+              name: '$locations.name',
+              dayMeals: '$locations.dayMeals',
+            },
           },
-          geometry: '$location.point',
+          geometry: '$locations.point',
         },
       },
     ])

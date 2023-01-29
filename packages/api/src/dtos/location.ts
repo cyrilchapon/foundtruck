@@ -1,5 +1,6 @@
 import { Location } from '@chimanos/foundtruck-db'
 import { z } from 'zod'
+import { dayMealZ } from './day-meal'
 import { pointZ } from './geojson'
 import { FlattenId } from './object-id'
 
@@ -10,6 +11,7 @@ export const locationZ = z
     _id: z.string(),
     name: z.string(),
     point: pointZ,
+    dayMeals: z.array(dayMealZ),
   })
   .strict() satisfies z.ZodType<_SerializedLocation>
 
