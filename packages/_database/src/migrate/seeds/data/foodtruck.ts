@@ -21,19 +21,31 @@ export const fakeFoodtruck = (
   options: {
     additionalData?: Record<string, unknown>
   } & LocationOptions,
-) => ({
-  name: faker.company.name(),
-  locations: fakeLocations(options),
-  ...options.additionalData,
-})
+) => {
+  const foodtruckId = new ObjectId(faker.database.mongodbObjectId())
+  const foodtruck = {
+    _id: foodtruckId,
+    name: faker.company.name(),
+    ...options.additionalData,
+  }
+  const locations = fakeLocations(foodtruckId, options)
 
-export const fakeLocations = (options: LocationOptions) => {
+  return { foodtruck, locations }
+}
+
+export const fakeLocations = (
+  foodtruckId: ObjectId,
+  options: {
+    additionalData?: Record<string, unknown>
+  } & LocationOptions,
+) => {
   const {
     minMaxLocations: { min: minLocations, max: maxLocations },
     minMaxDayMeals: { min: minDayMeals, max: maxDayMeals },
     nearBy,
     radius,
     isKm,
+    additionalData,
   } = options
 
   z.number().int().min(1).lte(maxLocations).parse(minLocations)
@@ -57,6 +69,8 @@ export const fakeLocations = (options: LocationOptions) => {
     name: faker.address.street(),
     point: fakePoint(nearBy, radius, isKm),
     dayMeals: locationDayMeals,
+    foodtruck: foodtruckId,
+    ...additionalData,
   }))
 
   return locations

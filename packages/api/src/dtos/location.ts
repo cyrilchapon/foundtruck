@@ -4,7 +4,7 @@ import { dayMealZ } from './day-meal'
 import { pointZ } from './geojson'
 import { FlattenId } from './object-id'
 
-type _SerializedLocation = FlattenId<Location>
+type _SerializedLocation = FlattenId<Location, '_id' | 'foodtruck'>
 
 export const locationZ = z
   .object({
@@ -12,6 +12,7 @@ export const locationZ = z
     name: z.string(),
     point: pointZ,
     dayMeals: z.array(dayMealZ),
+    foodtruck: z.string(),
   })
   .strict() satisfies z.ZodType<_SerializedLocation>
 

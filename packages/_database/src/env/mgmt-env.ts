@@ -11,12 +11,18 @@ interface MgmtEnv {
   NODE_ENV: KnownNodeEnv
   LOG_LEVEL: LogLevel
   MONGO_URI: string
+  MONGO_MGMT_URI: string
+  MONGO_MGMT_DB_NAME: string
+  MONGO_USE_RS: boolean
 }
 
 const mgmtEnvValidators = {
   NODE_ENV: envalid.str({ choices: knownNodeEnv }),
   LOG_LEVEL: logLevelValidator(),
-  MONGO_URI: envalid.url(),
+  MONGO_URI: envalid.str(),
+  MONGO_MGMT_URI: envalid.str(),
+  MONGO_MGMT_DB_NAME: envalid.str(),
+  MONGO_USE_RS: envalid.bool(),
 }
 
 const getMgmtEnv = (env: NodeJS.ProcessEnv = process.env) => {

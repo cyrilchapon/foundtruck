@@ -8,16 +8,14 @@ import {
 } from 'react-map-gl'
 import maplibregl from 'maplibre-gl'
 import { useSystemColorMode } from './hooks/use-system-color-mode'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Pin from './user-pin'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { franceCenter } from './util'
 import useGeolocation from 'react-hook-geolocation'
 import MapImage from './map-image'
-import type { Feature, Point } from 'geojson'
-import { distance } from '@turf/turf'
-import { throttle } from 'lodash'
+import { Feature, Point } from 'geojson'
 
 const systemColorMapStyles = {
   dark: 'https://api.maptiler.com/maps/streets-v2-dark/style.json?key=ykkVoTRA4nCSnF4onbUp',
@@ -26,6 +24,18 @@ const systemColorMapStyles = {
 }
 
 type UnderlyingMap = ReturnType<MapRef['getMap']>
+
+const createPoint = (coordinates: [number, number]): Feature<Point> => ({
+  type: 'Feature',
+  geometry: {
+    type: 'Point',
+    coordinates,
+  },
+  properties: {
+    lng: coordinates[0],
+    lat: coordinates[1],
+  },
+})
 
 const AppMap = () => {
   const colorMode = useSystemColorMode()
@@ -39,11 +49,11 @@ const AppMap = () => {
     longitude: userLng,
     latitude: userLat,
   } = useGeolocation()
-  const [userLoc, setUserLoc] = useState<[number, number] | null>(null)
+  const [userLoc, setUserLoc] = useState<Feature<Point> | null>(null)
 
   useEffect(() => {
     if (userLocErr == null && userLng != null && userLat != null) {
-      setUserLoc([userLng, userLat])
+      setUserLoc(createPoint([userLng, userLat]))
     }
   }, [userLocErr, userLng, userLat])
 
@@ -62,7 +72,7 @@ const AppMap = () => {
     }
   }
   const handleUserLocDrag = (e: MarkerDragEvent) => {
-    setUserLoc([e.lngLat.lng, e.lngLat.lat])
+    setUserLoc(createPoint([e.lngLat.lng, e.lngLat.lat]))
   }
 
   const [viewState, setViewState] = React.useState({
@@ -71,18 +81,11 @@ const AppMap = () => {
     zoom: 2,
   })
 
-  const updateFeaturesDistance = useMemo(
-    () =>
-      throttle(
-        _updateFeaturesDistance('foodtrucks-source', 'foodtrucks', 'distance'),
-        100,
-      ),
-    [],
-  )
-
-  const handleInteraction = useCallback(() => {
-    updateFeaturesDistance(userLoc, map)
-  }, [map, userLoc, updateFeaturesDistance])
+  React.useEffect(() => {
+    if (userLoc != null) {
+      // TODO : reload locations
+    }
+  }, [userLoc])
 
   // React.useEffect(() => {
   //   if (userLoc != null) {
@@ -103,11 +106,6 @@ const AppMap = () => {
       mapStyle={mapStyle}
       ref={mapRef}
       onLoad={handleMapLoad}
-      onDrag={handleInteraction}
-      onZoom={handleInteraction}
-      onRotate={handleInteraction}
-      onPitch={handleInteraction}
-      onSourceData={handleInteraction}
     >
       <MapImage id="marker" src="/foodtruck.png" sdf />
 
@@ -171,8 +169,8 @@ const AppMap = () => {
       {userLoc != null ? (
         <>
           <Marker
-            longitude={userLoc[0]}
-            latitude={userLoc[1]}
+            longitude={userLoc.geometry.coordinates[0]}
+            latitude={userLoc.geometry.coordinates[1]}
             anchor="bottom"
             draggable
             // onDragStart={onMarkerDragStart}
@@ -182,21 +180,7 @@ const AppMap = () => {
             <Pin size={20} />
           </Marker>
 
-          <Source
-            id="user-loc"
-            type="geojson"
-            data={{
-              type: 'Feature',
-              properties: {
-                lng: userLoc[0],
-                lat: userLoc[1],
-              },
-              geometry: {
-                type: 'Point',
-                coordinates: userLoc,
-              },
-            }}
-          >
+          <Source id="user-loc" type="geojson" data={userLoc}>
             <Layer
               id="user-secondary-circle"
               source="user-loc"
@@ -250,46 +234,5 @@ const AppMap = () => {
     </Map>
   )
 }
-
-const _updateFeaturesDistance =
-  (sourceId: string, layerId: string, featureStateName: string) =>
-  (userLoc: [number, number] | null, map: UnderlyingMap | null) => {
-    if (userLoc != null && map != null) {
-      const userLocFeature: Feature<Point> = {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: userLoc,
-        },
-        properties: {},
-      }
-
-      const features =
-        map.querySourceFeatures(sourceId, {
-          sourceLayer: layerId,
-        }) ?? []
-
-      features.forEach((f) => {
-        if (
-          f.id != null &&
-          f.type === 'Feature' &&
-          f.geometry.type === 'Point'
-        ) {
-          const distanceFromUser =
-            distance(f as Feature<Point>, userLocFeature) * 1000
-          map.setFeatureState(
-            {
-              ...f,
-              source: sourceId,
-              sourceLayer: layerId,
-            },
-            {
-              [featureStateName]: distanceFromUser,
-            },
-          )
-        }
-      })
-    }
-  }
 
 export default AppMap

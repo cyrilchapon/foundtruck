@@ -14,7 +14,7 @@ export const createUmzug = (mongo: MongoClient, purpose: UmzugPurpose) => {
       collectionName: `${purpose}s`,
     }),
     context: {
-      mongo: db,
+      mongo,
     },
     migrations: {
       glob: `src/migrate/${purpose}s/!(_template).ts`,

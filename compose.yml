@@ -8,13 +8,15 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: root
     restart: always
     volumes:
-      - ./_data/mongodb:/var/lib/mongo/data
+      - ./_data/mongodb:/data/db
     # tmpfs:
     #   - /var/lib/mongo/data
     mem_limit: 500m
     mem_reservation: 300m
   mongo-express:
     image: mongo-express
+    depends_on:
+      - mongo
     restart: always
     ports:
       - 8081:8081

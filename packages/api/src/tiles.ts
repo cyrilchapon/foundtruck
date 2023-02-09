@@ -15,7 +15,7 @@ let _tileIndex: GeoJSONVT | null = null
 
 export const buildTileIndex = async (models: Models, rebuild = false) => {
   if (_tileIndex == null || rebuild) {
-    const _features = await findAsGeoJSONFeatures(models.foodtruck)()
+    const _features = await findAsGeoJSONFeatures(models.location)()
     const features = _features.map((feature) => ({
       ...feature,
       // In geoJSON, feature.id has to be a number
@@ -23,6 +23,8 @@ export const buildTileIndex = async (models: Models, rebuild = false) => {
       // the increment value expressed in hexadecimal
       id: parseInt((feature.id as string).slice(18, 23), 16),
     }))
+
+    console.log(features[0])
 
     const featureCollection: FeatureCollection<Point> = {
       type: 'FeatureCollection',

@@ -1,5 +1,6 @@
-import { Types } from 'mongoose'
-
-export type FlattenId<T extends { _id: Types.ObjectId }> = Omit<T, '_id'> & {
-  _id: string
+export type FlattenId<T, objectIdKey extends string = '_id'> = Omit<
+  T,
+  objectIdKey
+> & {
+  [K in objectIdKey]: string
 }
